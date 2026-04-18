@@ -42,6 +42,8 @@ export class Dashboard {
 
   // --- UI 状態管理 ---
   isWatering = signal(false); // ボタンの非活性化フラグ
+  toast = signal<{ msg: string; type: 'success' | 'error' } | null>(null); // トーストの状態。null なら非表示
+  private toastTimerId: any = null; // タイマーIDを保持
 
   /**
    * 派生状態（Derived State）
@@ -56,19 +58,42 @@ export class Dashboard {
   });
 
   /**
-   * ユーザーアクション（副作用）
-   * 常に変化する「状態」ではないため、Signal に変換せず直接 Promise (then) でハンドリング。
-   * これにより、アクションの成否判定（トースト表示等）の見通しを良くしています。
+   * ユーザーアクション（給水）
+   * 【設計意図】
+   * 常に変化する「状態」ではないため、あえて Signal に変換せず、
+   * ライフサイクルが自明な Promise (then/finally) で直接ハンドリングしています。
+   * これにより、アクションの成否判定とそれに伴う副作用（トースト等）の
+   * 実行順序を、命令的なフローとして見通しよく記述しています。
+   *
+   * 1. 二重送信防止 (isWatering によるガード)
+   * 2. 物理デバイスへの副作用実行 (applyWater)
+   * 3. 実行結果のフィードバック (toast 表示 & 競合タイマー解除)
+   * 4. 非同期処理のクリーンアップ (finally によるフラグ復帰)
    */
   water() {
     if (this.isWatering()) return; // ボタンは disable になるけど念のため
-
     this.isWatering.set(true); // ボタンを disable 化
 
     this.sensorsService
       .applyWater()
       .then((result) => {
-        console.log('Watering result:', result);
+        // タイマー競合対策：先行するタイマーを破棄し、表示時間を最新に更新
+        if (this.toastTimerId) {
+          clearTimeout(this.toastTimerId);
+        }
+
+        // サービスから返却された詳細な実行結果（成功 or 失敗理由）を通知に反映
+        if (result.success) {
+          this.toast.set({ msg: 'Success: Hydrated! 💧', type: 'success' });
+        } else {
+          this.toast.set({ msg: `Error: ${result.error}`, type: 'error' });
+        }
+
+        // 指定時間後に通知を自動消去。IDを保持することで次回の実行時にキャンセル可能になる
+        this.toastTimerId = setTimeout(() => {
+          this.toast.set(null);
+          this.toastTimerId = null;
+        }, 4000);
       })
       .finally(() => {
         this.isWatering.set(false); // ボタンを able 化
@@ -84,5 +109,15 @@ export class Dashboard {
     return this.isWatering()
       ? 'bg-slate-400 cursor-not-allowed shadow-none transform-none' // 実行中
       : 'bg-sky-500 shadow-lg shadow-sky-200 hover:bg-sky-600 active:scale-95 cursor-pointer'; // 待機中
+  });
+
+  /**
+   * トーストの動的クラス（表情）
+   * 状態（Success/Error）に基づくスタイル定義を TS 側に集約し、テンプレートの宣言的記述を維持します。
+   */
+  toastClass = computed(() => {
+    const t = this.toast();
+    if (!t) return '';
+    return t.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500';
   });
 }

@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-6xl">
     <header class="mb-12 flex items-end justify-between">
       <div>
-        <h1 class="font-blac text-5xl tracking-tighter text-slate-800">{{ plantName() }}</h1>
+        <h1 class="text-5xl font-black tracking-tighter text-slate-800">{{ plantName() }}</h1>
         <p class="mt-2 text-lg font-medium text-slate-400">Node ID: HORRIDUS-001 / {{ nickname() }}</p>
       </div>
       <div class="hidden md:block">
@@ -79,3 +79,11 @@
     </div>
   </div>
 </div>
+@if (toast(); as t) {
+  <div
+    class="animate-in fade-in slide-in-from-bottom-4 fixed bottom-10 left-1/2 z-50 -translate-x-1/2 rounded-2xl px-8 py-4 font-bold text-white shadow-2xl transition-all duration-300"
+    [class]="toastClass()"
+  >
+    {{ t.msg }}
+  </div>
+}

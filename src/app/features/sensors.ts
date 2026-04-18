@@ -1,6 +1,8 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { interval, map, merge, scan, startWith, Subject } from 'rxjs';
 
+export type WaterResult = { success: true } | { success: false; error: string };
+
 /**
  * センサーデータ生成サービス
  * * 【設計意図】
@@ -58,9 +60,9 @@ export class Sensors implements OnDestroy {
     scan((current) => {
       const target = 25.4;
       const diff = target - current;
-      // 復元係数 0.1: ターゲットとの差の 10% を戻す。
+      // 復元係数 0.1: ターゲットとの差の 10% を戻す
       const restoreForce = diff * 0.1;
-      // 環境ノイズ（エアコンの揺らぎ等）を付与。
+      // 環境ノイズ（エアコンの揺らぎ等）を付与
       const noise = (Math.random() - 0.5) * 0.4;
 
       return current + restoreForce + noise;
@@ -74,17 +76,18 @@ export class Sensors implements OnDestroy {
    * SwitchBot 等の外部デバイスへの副作用を伴うため、Observable ではなく
    * ライフサイクルが自明な Promise で実装し、成功時のみ内部状態を更新します。
    */
-  async applyWater(): Promise<boolean> {
+  async applyWater(): Promise<WaterResult> {
     // 通信を模した待機
     await new Promise((r) => setTimeout(r, 1000));
 
     // 10%の確率で失敗をシミュレート
-    const result = Math.random() > 0.1;
-
-    if (result) {
-      this.waterSubject.next(this.WATERING_INCREMENT);
+    if (Math.random() < 0.1) {
+      // 失敗の理由をランダムにシミュレート（IoTのリアリティ）
+      const errorMsg = Math.random() > 0.5 ? 'Device Offline: Check connection' : 'Water Empty: Refill the tank';
+      return { success: false, error: errorMsg };
     }
-    // 失敗でも result (false) が返るので UI 側でハンドリング可能
-    return result;
+
+    this.waterSubject.next(this.WATERING_INCREMENT);
+    return { success: true };
   }
 }
