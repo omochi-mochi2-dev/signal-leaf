@@ -2,6 +2,9 @@
   "printWidth": 120,
   "endOfLine": "lf",
   "singleQuote": true,
+  "trailingComma": "all",
+  "semi": true,
+  "plugins": ["prettier-plugin-tailwindcss"],
   "overrides": [
     {
       "files": "*.html",
