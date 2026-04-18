@@ -1,1 +1,70 @@
-<p>dashboard works!</p>
+<div class="min-h-screen bg-slate-50 p-6 font-sans text-slate-900 selection:bg-emerald-100">
+  <div class="mx-auto max-w-6xl">
+    <header class="mb-12 flex items-end justify-between">
+      <div>
+        <h1 class="font-blac text-5xl tracking-tighter text-slate-800">{{ plantName() }}</h1>
+        <p class="mt-2 text-lg font-medium text-slate-400">Node ID: HORRIDUS-001 / {{ nickname() }}</p>
+      </div>
+      <div class="hidden md:block">
+        <span
+          class="inline-flex items-center gap-2 rounded-full border border-slate-100 bg-white px-4 py-2 text-sm font-bold shadow-sm"
+        >
+          <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+          </span>
+          Zoneless Tracking Active
+        </span>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-4 md:grid-rows-2">
+      <!-- 水分常態カード -->
+      <div
+        class="col-span-1 row-span-1 flex flex-col justify-between rounded-[2.5rem] border border-white bg-white p-10 shadow-xl md:col-span-2 md:row-span-2"
+      >
+        <div>
+          <h2 class="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">Environment Status</h2>
+          <div class="mt-6 text-4xl font-bold tracking-tighter transition-all" [class]="condition().color">
+            {{ condition().label }}
+          </div>
+        </div>
+        <div
+          class="mt-12 flex h-48 w-full items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-100"
+        >
+          <span class="font-bold text-slate-300 italic">Horridus Visualizer (Coming Soon)</span>
+        </div>
+      </div>
+      <!-- 気温カード -->
+      <div class="rounded-[2.5rem] border border-orange-100 bg-orange-50 p-8 shadow-sm">
+        <h2 class="text-xs font-bold tracking-widest text-orange-400 uppercase">Temperature</h2>
+        <div class="mt-4 flex items-baseline gap-1">
+          <span class="text-4xl font-black text-orange-600">{{ temperature() }}</span>
+          <span class="text-xl font-bold text-orange-400">°C</span>
+        </div>
+      </div>
+      <!-- 湿度カード -->
+      <div class="rounded-[2.5rem] border border-blue-100 bg-blue-50 p-8 shadow-sm">
+        <h2 class="text-xs font-bold tracking-widest text-blue-400 uppercase">Humidity</h2>
+        <div class="mt-4 flex items-baseline gap-1">
+          <span class="text-4xl font-black text-blue-600">{{ humidity() }}</span>
+          <span class="text-xl font-bold text-blue-400">%</span>
+        </div>
+      </div>
+      <!-- 資産価値カード -->
+      <div class="col-span-1 rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl md:col-span-2">
+        <h2 class="text-xs font-bold tracking-widest text-slate-500 uppercase">Current Market Asset</h2>
+        <div class="mt-4 font-mono text-4xl text-emerald-400">¥{{ marketValue() | number }}</div>
+      </div>
+      <!-- 給水カード -->
+      <div class="flex items-center">
+        <button
+          (click)="water()"
+          class="w-full rounded-[2rem] bg-emerald-500 py-6 text-xl font-black text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-600 active:scale-95"
+        >
+          GIVE WATER
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
