@@ -40,6 +40,9 @@ export class Dashboard {
   humidity = toSignal(this.sensorsService.humidity$, { initialValue: 42 }); // 湿度 (%)
   temperature = toSignal(this.sensorsService.temperature$, { initialValue: 25.4 }); // 温度 (℃)
 
+  // --- UI 状態管理 ---
+  isWatering = signal(false); // ボタンの非活性化フラグ
+
   /**
    * 派生状態（Derived State）
    * 湿度の Signal に依存し、閾値を超えた場合に自動で評価を再計算します。
@@ -58,8 +61,28 @@ export class Dashboard {
    * これにより、アクションの成否判定（トースト表示等）の見通しを良くしています。
    */
   water() {
-    this.sensorsService.applyWater().then((result) => {
-      console.log('Watering result:', result);
-    });
+    if (this.isWatering()) return; // ボタンは disable になるけど念のため
+
+    this.isWatering.set(true); // ボタンを disable 化
+
+    this.sensorsService
+      .applyWater()
+      .then((result) => {
+        console.log('Watering result:', result);
+      })
+      .finally(() => {
+        this.isWatering.set(false); // ボタンを able 化
+      });
   }
+
+  /**
+   * ボタンの状態クラス（Dynamic）
+   * FOUC (Flash of Unstyled Content) 対策のため、
+   * 静的な骨格スタイルは HTML 側に、動的な表情のみを本 Signal で管理・合成します。
+   */
+  buttonStateClass = computed(() => {
+    return this.isWatering()
+      ? 'bg-slate-400 cursor-not-allowed shadow-none transform-none' // 実行中
+      : 'bg-sky-500 shadow-lg shadow-sky-200 hover:bg-sky-600 active:scale-95 cursor-pointer'; // 待機中
+  });
 }

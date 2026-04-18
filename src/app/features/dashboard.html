@@ -65,11 +65,13 @@
         </div>
         <div class="mt-4 font-mono text-4xl text-slate-600">¥{{ marketValue() | number }}</div>
       </div>
-      <!-- 給水カード -->
+      <!-- 給水ボタン -->
       <div class="flex items-center">
         <button
           (click)="water()"
-          class="w-full rounded-[2rem] bg-sky-500 py-6 text-xl font-black text-white shadow-lg shadow-sky-200 transition-all hover:bg-sky-600 active:scale-95"
+          class="w-full rounded-[2rem] py-6 text-xl font-black text-white transition-all duration-200"
+          [class]="buttonStateClass()"
+          [disabled]="isWatering()"
         >
           GIVE WATER
         </button>
