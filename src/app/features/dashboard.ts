@@ -1,6 +1,13 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Sensors } from './sensors';
 
+/**
+ * ダッシュボードコンポーネント
+ * センサー（RxJSストリーム）を Signals に変換して同期し、
+ * Zoneless 環境下でのピンポイントな DOM 更新を実現します。
+ */
 @Component({
   selector: 'app-dashboard',
   imports: [DecimalPipe],
@@ -8,16 +15,27 @@ import { Component, computed, signal } from '@angular/core';
   styleUrl: './dashboard.scss',
 })
 export class Dashboard {
-  // 基本データ: Singnals
-  plantName = signal('Encephalartos horridus'); // TODO: 後で変える機能作る
-  nickname = signal('Blue Diamond'); // TODO: 後で変える機能作る
+  private readonly sensorsService = inject(Sensors);
 
-  // センサーデータ：ここを後で RxJS でプルプル動かします
-  humidity = signal(42); // 湿度 (%)
-  temperature = signal(25.4); // 温度 (℃)
+  //--- 永続的な状態（将来的に編集可能にする想定） ---
+  plantName = signal('Encephalartos horridus'); // 植物の名前
+  nickname = signal('Blue Diamond'); // 植物のニックネーム
+  marketValue = signal(850000); // 現行の価値
 
-  // 計算値：computed（Signals の真骨頂）
-  // 湿度が 30% を切ると「Drought（干ばつ）」、70% を超えると「Overwet（多湿）」
+  // --- リアルタイムな動的状態 ---
+  /**
+   * RxJS ストリームの Signal 化
+   * toSignal を使うことで、非同期データの「最新の値」を宣言的に取得。
+   * Zoneless 環境では、Signal の値が更新された瞬間のみ検知され、DOM が最小限に書き換わります。
+   */
+  humidity = toSignal(this.sensorsService.humidity$, { initialValue: 42 }); // 湿度 (%)
+  temperature = toSignal(this.sensorsService.temperature$, { initialValue: 25.4 }); // 温度 (℃)
+
+  /**
+   * 派生状態（Derived State）
+   * 湿度の Signal に依存し、閾値を超えた場合に自動で評価を再計算します。
+   * Angular 21/22 における「Push（値の発生）」から「Pull（値の同期）」への回帰を体現。
+   */
   condition = computed(() => {
     const h = this.humidity();
     if (h < 30) return { label: 'Drought', color: 'text-red-500' };
@@ -25,12 +43,8 @@ export class Dashboard {
     return { label: 'Optimal', color: 'text-emerald-500' };
   });
 
-  // 資産価値
-  marketValue = signal(850000);
-
-  // メソッド：値を更新する
   water() {
-    this.humidity.set(85); // 水をあげると湿度が跳ね上がる
-    // この瞬間、condition() も自動的に 'Overwet' に再計算される
+    // TODO: 水やりイベントを Service 経由でストリームに merge する予定
+    console.log('Give water');
   }
 }
