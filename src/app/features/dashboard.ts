@@ -5,14 +5,23 @@ import { Sensors } from './sensors';
 
 /**
  * ダッシュボードコンポーネント
+ * * 【設計意図】
  * センサー（RxJSストリーム）を Signals に変換して同期し、
  * Zoneless 環境下でのピンポイントな DOM 更新を実現します。
+ * * 【アーキテクチャ】
+ * 1. Hierarchical DI:
+ * Sensors サービスを providers に登録し、コンポーネントとライフサイクルを同期。
+ * 画面遷移時の確実なメモリ解放を担保します。
+ * 2. 状態（State）と命令（Action）の分離:
+ * 継続的な変化は Signals (toSignal) で同期し、単発のアクションは Promise (.then) で処理。
+ * 性質に応じた最適な技術選定を提示します。
  */
 @Component({
   selector: 'app-dashboard',
   imports: [DecimalPipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
+  providers: [Sensors], // ライフサイクル管理の局所化
 })
 export class Dashboard {
   private readonly sensorsService = inject(Sensors);
@@ -43,8 +52,14 @@ export class Dashboard {
     return { label: 'Optimal', color: 'text-emerald-500' };
   });
 
+  /**
+   * ユーザーアクション（副作用）
+   * 常に変化する「状態」ではないため、Signal に変換せず直接 Promise (then) でハンドリング。
+   * これにより、アクションの成否判定（トースト表示等）の見通しを良くしています。
+   */
   water() {
-    // TODO: 水やりイベントを Service 経由でストリームに merge する予定
-    console.log('Give water');
+    this.sensorsService.applyWater().then((result) => {
+      console.log('Watering result:', result);
+    });
   }
 }
