@@ -27,23 +27,41 @@ export class Dashboard {
   private readonly sensorsService = inject(Sensors);
 
   //--- 永続的な状態（将来的に編集可能にする想定） ---
+  nodeId = signal('HORRIDUS-001');
   plantName = signal('Encephalartos horridus'); // 植物の名前
   nickname = signal('Blue Diamond'); // 植物のニックネーム
   marketValue = signal(850000); // 現行の価値
+  droughtThreshold = signal<number>(30); // 水分量（干ばつ）の閾値
+  overwetThreshold = signal<number>(70); // 水分量（多湿）の閾値
 
   // --- リアルタイムな動的状態 ---
   /**
    * RxJS ストリームの Signal 化
    * toSignal を使うことで、非同期データの「最新の値」を宣言的に取得。
    * Zoneless 環境では、Signal の値が更新された瞬間のみ検知され、DOM が最小限に書き換わります。
+   * * 【追記：requireSync の活用】
+   * Sensors 側の startWith を信頼し、Dashboard 側での redundant な初期値定義を排除。
+   * ストリームの同期的な初動を保証し、型から undefined を消失させます。
    */
-  humidity = toSignal(this.sensorsService.humidity$, { initialValue: 42 }); // 湿度 (%)
-  temperature = toSignal(this.sensorsService.temperature$, { initialValue: 25.4 }); // 温度 (℃)
+  humidity = toSignal(this.sensorsService.humidity$, { requireSync: true }); // 湿度 (%)
+  temperature = toSignal(this.sensorsService.temperature$, { requireSync: true }); // 温度 (℃)
 
   // --- UI 状態管理 ---
   isWatering = signal(false); // ボタンの非活性化フラグ
   toast = signal<{ msg: string; type: 'success' | 'error' } | null>(null); // トーストの状態。null なら非表示
   private toastTimerId: any = null; // タイマーIDを保持
+
+  /**
+   * コンストラクタ
+   * 【設計意図】
+   * コンポーネントのライフサイクル開始に合わせて、サービスへ必要な設定値（ID、閾値）を注入。
+   * 多湿（Overwet）閾値に関しては、センサー側コメントの通り現状アクション（ファン駆動等）が
+   * 不能なフェーズであるため、監視初期化の対象からは意図的に除外しています。
+   */
+  constructor() {
+    // コンポーネント生成時に ID と「今必要な」閾値を叩き込む
+    this.sensorsService.init(this.nodeId(), this.droughtThreshold());
+  }
 
   /**
    * 派生状態（Derived State）
@@ -52,8 +70,8 @@ export class Dashboard {
    */
   condition = computed(() => {
     const h = this.humidity();
-    if (h < 30) return { label: 'Drought', color: 'text-red-500' };
-    if (h > 70) return { label: 'Overwet', color: 'text-blue-500' };
+    if (h < this.droughtThreshold()) return { label: 'Drought', color: 'text-red-500' };
+    if (h > this.overwetThreshold()) return { label: 'Overwet', color: 'text-blue-500' };
     return { label: 'Optimal', color: 'text-emerald-500' };
   });
 
