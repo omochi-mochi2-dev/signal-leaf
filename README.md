@@ -47,8 +47,8 @@
 
 ## 🛠️ 技術スタック
 
-- **Framework:** Angular (v16+ Signals architecture)
-- **State Management:** Angular Signals API & RxJS
+- **Framework:** Angular v21 (Modern Signals & Zoneless Architecture)
+- **State Management:** Angular Signals API & RxJS (Standard-based reactive flow)
 - **Styling:** Tailwind CSS (App-like 100vh layout)
 
 ## 💻 Getting Started
@@ -57,7 +57,7 @@
 
 環境構築不要で、ブラウザ上ですぐに実際の動作とリアクティブな挙動を確認できます。
 
-[![Open in CodeSandbox](https://codesandbox.io/p/github/omochi-mochi2-dev/signal-leaf/main)
+[Open in CodeSandbox](https://codesandbox.io/p/github/omochi-mochi2-dev/signal-leaf/main)
 
 ### 🛠️ Local Development
 
@@ -65,7 +65,7 @@
 
 ```bash
 # 1. リポジトリのクローン
-git clone [https://github.com/omochi-mochi2-dev/signal-leaf.git](https://github.com/omochi-mochi2-dev/signal-leaf.git)
+git clone https://github.com/omochi-mochi2-dev/signal-leaf.git
 cd リポジトリ名
 
 # 2. 依存関係のインストール
