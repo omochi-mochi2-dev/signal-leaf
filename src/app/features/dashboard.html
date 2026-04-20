@@ -34,7 +34,8 @@
             <div class="relative">
               <input
                 type="text"
-                placeholder="Search logs..."
+                (input)="onSearch($event)"
+                placeholder="Search logs (Wait 3s)..."
                 class="w-full rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-medium transition-all outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50"
               />
               <span class="absolute top-4 right-4 text-slate-300">🔍</span>
@@ -45,7 +46,7 @@
             <h3 class="mb-4 text-[10px] font-bold tracking-widest text-slate-300 uppercase">Activity Logs</h3>
 
             <div class="custom-scrollbar flex-1 space-y-3 overflow-y-auto pr-2">
-              @for (log of logs(); track log.id) {
+              @for (log of filteredLogs(); track log.id) {
                 <div
                   class="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-[13px] transition-all hover:bg-slate-100"
                 >

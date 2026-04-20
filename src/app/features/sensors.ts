@@ -18,17 +18,18 @@ export interface LogEntry {
 /**
  * センサーデータ生成サービス
  * * 【設計意図】
- * 本サービスは、将来的な IoT デバイス（SwitchBot等）やクラウド側との API 連携を想定し、
- * 定期的なデータ取得を模倣する「疑似ポーリング（Pseudo-polling）」形式で実装しています。
- * RxJS の interval を用いることで、Zoneless 環境下における非同期データの
- * 継続的な流入と、それに対する Signals のリアクティブな反応を検証・実証します。
- * * 【メモリ管理・スコープ】
- * 1. スコープの局所化:
- * providedIn: 'root' を避け、コンポーネントの providers に登録することを前提としています。
- * これにより、ダッシュボード画面の破棄と同時に本インスタンスも破棄され、リソースが完全に解放されます。
- * 2. クリーンアップの自動化:
- * Subject 自体は値を蓄積しませんが、ngOnDestroy で明示的に complete() させることで、
- * この Subject を源流とする全ての RxJS ストリームの「蛇口」を確実に閉じ、ゾンビ処理を防止します。
+ * 将来的な IoT デバイスやクラウド API 連携を見据え、
+ * 継続的な状態変化を模倣する「疑似ポーリング」形式と、
+ * 離散的な命令（API）を想定した形式を組み合わせて実装しています。
+ * * 【アーキテクチャ】
+ * 1. 非同期データフローの原典:
+ * interval や Subject を組み合わせ、Zoneless 環境下における継続的な「変化」の源泉となります。
+ * * 2. 命令的アクションとログの統合:
+ * 物理デバイスへの副作用（水やり等）を Promise で扱い、
+ * その結果をログストリームへ還元。成否のフィードバックループをカプセル化しています。
+ * * 3. プロデューサーとしてのリソース解放:
+ * 自身が発行するストリーム（Subject）に対し、破棄時の完結（complete）を保証。
+ * 購読側（Dashboard等）の安全性を下流から支える設計としています。
  */
 @Injectable()
 export class Sensors implements OnDestroy {
@@ -147,11 +148,15 @@ export class Sensors implements OnDestroy {
     return { success: true };
   }
 
-  // ログを書き込むメソッド
+  /**
+   * 内部ログ記録メソッド
+   * ログの正規化（ID・時刻付与）を一括で行い、
+   * 配列をイミュータブルに更新（先頭追加）することでSignal を通じて最新の履歴をリアクティブに通知します。
+   */
   addLog(type: LogType, msg: string) {
     // update は「今の箱の中身（curr）」を取り出して、新しい中身に差し替える機能
     this.logs.update((curr) => {
-      // 1. 新しいログのデータを作る
+      // 新しいログのデータを作る
       const newLog: LogEntry = {
         id: crypto.randomUUID(), // かぶらないランダムなIDを自動生成
         nodeId: this.nodeId(),
@@ -160,8 +165,7 @@ export class Sensors implements OnDestroy {
         msg: msg,
       };
 
-      // 2. [新しいログ, ...今までのログ全部] という順番に並べ替えて、
-      // 3. .slice(0, 50) で上から50個だけ残して古いものを捨てる！
+      // [新しいログ, ...今までのログ全部] という順番に並べ替えて、.slice(0, 50) で上から50個だけ残して古いものを捨てる
       return [newLog, ...curr].slice(0, 50);
     });
   }
