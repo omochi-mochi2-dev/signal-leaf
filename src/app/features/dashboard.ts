@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Sensors } from './sensors';
@@ -18,7 +18,7 @@ import { Sensors } from './sensors';
  */
 @Component({
   selector: 'app-dashboard',
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, DatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   providers: [Sensors], // ライフサイクル管理の局所化
@@ -45,6 +45,8 @@ export class Dashboard {
    */
   humidity = toSignal(this.sensorsService.humidity$, { requireSync: true }); // 湿度 (%)
   temperature = toSignal(this.sensorsService.temperature$, { requireSync: true }); // 温度 (℃)
+  // サービス側のログをシグナルとして公開（SSOTの維持）
+  readonly logs = this.sensorsService.logs;
 
   // --- UI 状態管理 ---
   isWatering = signal(false); // ボタンの非活性化フラグ
@@ -102,7 +104,7 @@ export class Dashboard {
 
         // サービスから返却された詳細な実行結果（成功 or 失敗理由）を通知に反映
         if (result.success) {
-          this.toast.set({ msg: 'Success: Hydrated! 💧', type: 'success' });
+          this.toast.set({ msg: 'Success: Hydrated!', type: 'success' });
         } else {
           this.toast.set({ msg: `Error: ${result.error}`, type: 'error' });
         }

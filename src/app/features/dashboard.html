@@ -1,9 +1,9 @@
-<div class="min-h-screen bg-slate-50 p-6 font-sans text-slate-900 selection:bg-emerald-100">
-  <div class="mx-auto max-w-6xl">
-    <header class="mb-12 flex items-end justify-between">
+<div class="flex h-screen flex-col overflow-hidden bg-slate-50 p-6 font-sans text-slate-900 selection:bg-emerald-100">
+  <div class="mx-auto flex h-full w-full max-w-6xl flex-col">
+    <header class="mb-8 flex shrink-0 items-end justify-between">
       <div>
         <h1 class="text-5xl font-black tracking-tighter text-slate-800">{{ plantName() }}</h1>
-        <p class="mt-2 text-lg font-medium text-slate-400">Node ID: HORRIDUS-001 / {{ nickname() }}</p>
+        <p class="mt-2 text-lg font-medium text-slate-400">Node ID: {{ nodeId() }} / {{ nickname() }}</p>
       </div>
       <div class="hidden md:block">
         <span
@@ -18,67 +18,108 @@
       </div>
     </header>
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-4 md:grid-rows-2">
-      <!-- 状態カード -->
-      <div
-        class="col-span-1 row-span-1 flex flex-col justify-between rounded-[2.5rem] border border-white bg-white p-10 shadow-xl md:col-span-2 md:row-span-2"
-      >
-        <div>
-          <h2 class="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">Environment Status</h2>
-          <div class="mt-6 text-4xl font-bold tracking-tighter transition-all" [class]="condition().color">
-            {{ condition().label }}
+    <div class="mb-6 min-h-0 flex-1">
+      <div class="grid h-full grid-cols-1 gap-6 md:grid-cols-4 md:grid-rows-2">
+        <div
+          class="col-span-1 row-span-1 flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-white bg-white p-10 shadow-xl md:col-span-2 md:row-span-2"
+        >
+          <div class="shrink-0">
+            <h2 class="text-xs font-bold tracking-[0.2em] text-slate-400 uppercase">Environment Status</h2>
+            <div class="mt-6 text-4xl font-bold tracking-tighter transition-all" [class]="condition().color">
+              {{ condition().label }}
+            </div>
+          </div>
+
+          <div class="mt-8 shrink-0">
+            <div class="relative">
+              <input
+                type="text"
+                placeholder="Search logs..."
+                class="w-full rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-medium transition-all outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50"
+              />
+              <span class="absolute top-4 right-4 text-slate-300">🔍</span>
+            </div>
+          </div>
+
+          <div class="mt-6 flex min-h-0 flex-1 flex-col border-t border-slate-50 pt-6">
+            <h3 class="mb-4 text-[10px] font-bold tracking-widest text-slate-300 uppercase">Activity Logs</h3>
+
+            <div class="custom-scrollbar flex-1 space-y-3 overflow-y-auto pr-2">
+              @for (log of logs(); track log.id) {
+                <div
+                  class="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-[13px] transition-all hover:bg-slate-100"
+                >
+                  <span class="mt-0.5 font-mono text-[10px] text-slate-400">{{ log.time | date: 'HH:mm:ss' }}</span>
+                  <div class="flex-1">
+                    <span
+                      class="mr-2 inline-block rounded px-1.5 py-0.5 text-[9px] font-bold uppercase shadow-sm"
+                      [class]="{
+                        'bg-rose-100 text-rose-600': log.type === 'ALERT',
+                        'bg-sky-100 text-sky-600': log.type === 'ACTION',
+                        'bg-slate-200 text-slate-600': log.type === 'SYSTEM',
+                      }"
+                    >
+                      {{ log.type }}
+                    </span>
+                    <span class="leading-relaxed font-medium text-slate-700">{{ log.msg }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="flex h-full items-center justify-center text-sm text-slate-300 italic">
+                  No activity recorded yet.
+                </div>
+              }
+            </div>
           </div>
         </div>
+        <!-- 気温カード -->
+        <div class="flex flex-col justify-center rounded-[2.5rem] border border-orange-100 bg-white p-8 shadow-sm">
+          <div class="flex items-center">
+            <h2 class="text-xs font-bold tracking-widest text-orange-400 uppercase">Temperature</h2>
+            <span class="ml-2 text-xl">🌡️</span>
+          </div>
+          <div class="mt-4 flex items-baseline gap-1">
+            <span class="text-4xl font-black text-orange-600">{{ temperature() }}</span>
+            <span class="text-xl font-bold text-orange-400">°C</span>
+          </div>
+        </div>
+        <!-- 水分量カード -->
+        <div class="flex flex-col justify-center rounded-[2.5rem] border border-blue-100 bg-white p-8 shadow-sm">
+          <div class="flex items-center">
+            <h2 class="text-xs font-bold tracking-widest text-blue-400 uppercase">Humidity</h2>
+            <span class="ml-2 text-xl">💧</span>
+          </div>
+          <div class="mt-4 flex items-baseline gap-1">
+            <span class="text-4xl font-black text-blue-600">{{ humidity() }}</span>
+            <span class="text-xl font-bold text-blue-400">%</span>
+          </div>
+        </div>
+        <!-- 資産価値カード -->
         <div
-          class="mt-12 flex h-48 w-full items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-100"
+          class="col-span-1 flex flex-col justify-center rounded-[2.5rem] border border-emerald-100 bg-white p-8 shadow-sm md:col-span-2"
         >
-          <span class="font-bold text-slate-300 italic">Horridus Visualizer (Coming Soon)</span>
+          <div class="flex items-center">
+            <h2 class="text-xs font-bold tracking-widest text-slate-500 uppercase">Current Market Asset</h2>
+            <span class="ml-2 text-2xl">💵</span>
+          </div>
+          <div class="mt-4 font-mono text-4xl text-slate-600">¥{{ marketValue() | number }}</div>
         </div>
-      </div>
-      <!-- 気温カード -->
-      <div class="rounded-[2.5rem] border border-orange-100 bg-white p-8 shadow-sm">
-        <div class="flex items-center">
-          <h2 class="text-xs font-bold tracking-widest text-orange-400 uppercase">Temperature</h2>
-          <span class="text-xl">🌡️</span>
+        <!-- 給水ボタン -->
+        <div class="flex items-stretch">
+          <button
+            (click)="water()"
+            class="w-full rounded-[2.5rem] py-6 text-xl font-black text-white transition-all duration-200"
+            [class]="buttonStateClass()"
+            [disabled]="isWatering()"
+          >
+            GIVE WATER
+          </button>
         </div>
-        <div class="mt-4 flex items-baseline gap-1">
-          <span class="text-4xl font-black text-orange-600">{{ temperature() }}</span>
-          <span class="text-xl font-bold text-orange-400">°C</span>
-        </div>
-      </div>
-      <!-- 水分量カード -->
-      <div class="rounded-[2.5rem] border border-blue-100 bg-white p-8 shadow-sm">
-        <div class="flex items-center">
-          <h2 class="text-xs font-bold tracking-widest text-blue-400 uppercase">Humidity</h2>
-          <span class="text-xl">💧</span>
-        </div>
-        <div class="mt-4 flex items-baseline gap-1">
-          <span class="text-4xl font-black text-blue-600">{{ humidity() }}</span>
-          <span class="text-xl font-bold text-blue-400">%</span>
-        </div>
-      </div>
-      <!-- 資産価値カード -->
-      <div class="col-span-1 rounded-[2.5rem] border border-emerald-100 bg-white p-8 shadow-sm md:col-span-2">
-        <div class="flex items-center">
-          <h2 class="text-xs font-bold tracking-widest text-slate-500 uppercase">Current Market Asset</h2>
-          <span class="text-2xl">💵</span>
-        </div>
-        <div class="mt-4 font-mono text-4xl text-slate-600">¥{{ marketValue() | number }}</div>
-      </div>
-      <!-- 給水ボタン -->
-      <div class="flex items-center">
-        <button
-          (click)="water()"
-          class="w-full rounded-[2rem] py-6 text-xl font-black text-white transition-all duration-200"
-          [class]="buttonStateClass()"
-          [disabled]="isWatering()"
-        >
-          GIVE WATER
-        </button>
       </div>
     </div>
   </div>
 </div>
+
 @if (toast(); as t) {
   <div
     class="animate-in fade-in slide-in-from-bottom-4 fixed bottom-10 left-1/2 z-50 -translate-x-1/2 rounded-2xl px-8 py-4 font-bold text-white shadow-2xl transition-all duration-300"

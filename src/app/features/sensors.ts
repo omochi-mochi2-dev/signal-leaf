@@ -53,7 +53,7 @@ export class Sensors implements OnDestroy {
   init(nodeId: string, droughtThreshold: number) {
     this.nodeId.set(nodeId);
     this.droughtThreshold.set(droughtThreshold);
-    this.addLog('SYSTEM', `System online: [${this.nodeId()}] (Drought threshold: ${this.droughtThreshold()}%)`);
+    this.addLog('SYSTEM', `System online: Drought threshold: ${this.droughtThreshold()}%`);
   }
 
   // コンポーネントが消える時、このサービスも道連れに破棄されてここが動く
@@ -164,6 +164,5 @@ export class Sensors implements OnDestroy {
       // 3. .slice(0, 50) で上から50個だけ残して古いものを捨てる！
       return [newLog, ...curr].slice(0, 50);
     });
-    console.dir(this.logs());
   }
 }
