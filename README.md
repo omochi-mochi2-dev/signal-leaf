@@ -57,7 +57,7 @@
 
 環境構築不要で、ブラウザ上ですぐに実際の動作とリアクティブな挙動を確認できます。
 
-[Open in CodeSandbox](https://codesandbox.io/p/github/omochi-mochi2-dev/signal-leaf/main)
+[View Dashboard On Vercel](https://signal-leaf.vercel.app/)
 
 ### 🛠️ Local Development
 
